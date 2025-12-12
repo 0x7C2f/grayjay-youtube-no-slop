@@ -6,9 +6,10 @@
 	"platformUrl": "https://youtube.com",
 	"sourceUrl": "https://raw.githubusercontent.com/0x7C2f/grayjay-youtube-no-slop/master/YoutubeUnstableConfig.json",
 	"repositoryUrl": "https://github.com/0x7C2f/grayjay-youtube-no-slop",
+	"scriptUrl": "https://raw.githubusercontent.com/0x7C2f/grayjay-youtube-no-slop/master/YoutubeScript.js",
 
 	"version": 311,
-	"iconUrl": "./youtube.png",
+	"iconUrl": "https://raw.githubusercontent.com/0x7C2f/grayjay-youtube-no-slop/master/youtube.png",
 	"id": "08fdde3d-4094-46fa-902b-700110837712",
 
 	"scriptSignature": "",
