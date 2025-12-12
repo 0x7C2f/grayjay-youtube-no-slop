@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Band Submissions Admin</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #333;
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .submission {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        background-color: #fafafa;
+      }
+      .submission.pending {
+        border-left: 4px solid #ffa500;
+      }
+      .submission.approved {
+        border-left: 4px solid #28a745;
+        background-color: #f8fff8;
+      }
+      .submission.rejected {
+        border-left: 4px solid #dc3545;
+        background-color: #fff8f8;
+      }
+      .submission-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+      .submission-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #333;
+      }
+      .submission-date {
+        color: #666;
+        font-size: 14px;
+      }
+      .submission-content {
+        margin-bottom: 15px;
+      }
+      .submission-field {
+        margin-bottom: 10px;
+      }
+      .field-label {
+        font-weight: bold;
+        color: #555;
+      }
+      .field-value {
+        margin-left: 10px;
+      }
+      .links {
+        margin-top: 10px;
+      }
+      .link {
+        display: block;
+        color: #0066cc;
+        text-decoration: none;
+        margin-bottom: 5px;
+      }
+      .link:hover {
+        text-decoration: underline;
+      }
+      .actions {
+        margin-top: 15px;
+        display: flex;
+        gap: 10px;
+      }
+      button {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      .approve-btn {
+        background-color: #28a745;
+        color: white;
+      }
+      .reject-btn {
+        background-color: #dc3545;
+        color: white;
+      }
+      .loading {
+        display: none;
+        color: #666;
+        font-style: italic;
+      }
+      .stats {
+        display: flex;
+        justify-content: space-around;
+        margin-bottom: 30px;
+        padding: 20px;
+        background-color: #e9ecef;
+        border-radius: 8px;
+      }
+      .stat {
+        text-align: center;
+      }
+      .stat-number {
+        font-size: 24px;
+        font-weight: bold;
+        color: #333;
+      }
+      .stat-label {
+        color: #666;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>AI Band Submissions Admin</h1>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-number" id="total-count">0</div>
+          <div class="stat-label">Total Submissions</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number" id="pending-count">0</div>
+          <div class="stat-label">Pending Review</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number" id="approved-count">0</div>
+          <div class="stat-label">Approved</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number" id="rejected-count">0</div>
+          <div class="stat-label">Rejected</div>
+        </div>
+      </div>
+
+      <div id="submissions-container">
+        <div class="loading">Loading submissions...</div>
+      </div>
+    </div>
+
+    <script>
+      const adminToken =
+        localStorage.getItem("adminToken") || prompt("Enter admin token:");
+      if (adminToken) {
+        localStorage.setItem("adminToken", adminToken);
+      }
+
+      async function loadSubmissions() {
+        try {
+          const response = await fetch("/api/admin/submissions", {
+            headers: {
+              Authorization: `Bearer ${adminToken}`,
+            },
+          });
+
+          if (response.status === 401) {
+            alert("Invalid admin token");
+            localStorage.removeItem("adminToken");
+            location.reload();
+            return;
+          }
+
+          const submissions = await response.json();
+          displaySubmissions(submissions);
+          updateStats(submissions);
+        } catch (error) {
+          console.error("Error loading submissions:", error);
+          document.getElementById("submissions-container").innerHTML =
+            '<div style="color: red; text-align: center; padding: 20px;">Error loading submissions</div>';
+        }
+      }
+
+      function displaySubmissions(submissions) {
+        const container = document.getElementById("submissions-container");
+
+        if (submissions.length === 0) {
+          container.innerHTML =
+            '<div style="text-align: center; padding: 20px; color: #666;">No submissions yet</div>';
+          return;
+        }
+
+        const html = submissions
+          .map(
+            (submission) => `
+                <div class="submission ${submission.status}" id="submission-${submission.id}">
+                    <div class="submission-header">
+                        <div class="submission-title">${escapeHtml(submission.artistName)}</div>
+                        <div class="submission-date">${new Date(submission.timestamp).toLocaleDateString()}</div>
+                    </div>
+                    <div class="submission-content">
+                        <div class="submission-field">
+                            <span class="field-label">YouTube URL:</span>
+                            <span class="field-value"><a href="${escapeHtml(submission.youtubeUrl)}" target="_blank">${escapeHtml(submission.youtubeUrl)}</a></span>
+                        </div>
+                        <div class="submission-field">
+                            <span class="field-label">Verification Links:</span>
+                            <div class="links">
+                                ${submission.verificationLinks
+                                  .map(
+                                    (link) =>
+                                      `<a href="${escapeHtml(link)}" target="_blank" class="link">${escapeHtml(link)}</a>`,
+                                  )
+                                  .join("")}
+                            </div>
+                        </div>
+                        ${
+                          submission.otherPlatforms.length > 0
+                            ? `
+                            <div class="submission-field">
+                                <span class="field-label">Other Platforms:</span>
+                                <div class="links">
+                                    ${submission.otherPlatforms
+                                      .map(
+                                        (link) =>
+                                          `<a href="${escapeHtml(link)}" target="_blank" class="link">${escapeHtml(link)}</a>`,
+                                      )
+                                      .join("")}
+                                </div>
+                            </div>
+                        `
+                            : ""
+                        }
+                        ${
+                          submission.additionalInfo
+                            ? `
+                            <div class="submission-field">
+                                <span class="field-label">Additional Info:</span>
+                                <span class="field-value">${escapeHtml(submission.additionalInfo)}</span>
+                            </div>
+                        `
+                            : ""
+                        }
+                    </div>
+                    ${
+                      submission.status === "pending"
+                        ? `
+                        <div class="actions">
+                            <button class="approve-btn" onclick="processSubmission('${submission.id}', 'approve')">
+                                ✅ Approve
+                            </button>
+                            <button class="reject-btn" onclick="processSubmission('${submission.id}', 'reject')">
+                                ❌ Reject
+                            </button>
+                        </div>
+                    `
+                        : `
+                        <div class="actions">
+                            <span style="color: ${submission.status === "approved" ? "green" : "red"}; font-weight: bold;">
+                                ${submission.status === "approved" ? "✅ Approved" : "❌ Rejected"}
+                            </span>
+                        </div>
+                    `
+                    }
+                </div>
+            `,
+          )
+          .join("");
+
+        container.innerHTML = html;
+      }
+
+      function updateStats(submissions) {
+        const total = submissions.length;
+        const pending = submissions.filter(
+          (s) => s.status === "pending",
+        ).length;
+        const approved = submissions.filter(
+          (s) => s.status === "approved",
+        ).length;
+        const rejected = submissions.filter(
+          (s) => s.status === "rejected",
+        ).length;
+
+        document.getElementById("total-count").textContent = total;
+        document.getElementById("pending-count").textContent = pending;
+        document.getElementById("approved-count").textContent = approved;
+        document.getElementById("rejected-count").textContent = rejected;
+      }
+
+      async function processSubmission(id, action) {
+        try {
+          const button = event.target;
+          const originalText = button.textContent;
+          button.textContent = "Processing...";
+          button.disabled = true;
+
+          const response = await fetch(`/api/admin/submissions/${id}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${adminToken}`,
+            },
+            body: JSON.stringify({
+              action: action,
+              aiBandsPath: "../ai-bands.json",
+            }),
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            // Reload submissions
+            loadSubmissions();
+          } else {
+            alert("Error: " + (result.error || "Unknown error"));
+            button.textContent = originalText;
+            button.disabled = false;
+          }
+        } catch (error) {
+          console.error("Error processing submission:", error);
+          alert("Error processing submission");
+          event.target.textContent = originalText;
+          event.target.disabled = false;
+        }
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      // Load submissions on page load
+      loadSubmissions();
+    </script>
+  </body>
+</html>

@@ -3278,5 +3278,18 @@
     "tiktok": null,
     "amazon": null,
     "urls": []
+  },
+  {
+    "name": "Test AI Band",
+    "dateAdded": "2025-12-12",
+    "dateUpdated": null,
+    "comments": null,
+    "tags": [
+      "ai-generated"
+    ],
+    "youtube": "https://www.youtube.com/@test",
+    "urls": [
+      "https://example.com"
+    ]
   }
 ]

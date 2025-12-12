@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Submit AI Band - Grayjay YouTube Plugin</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #333;
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .form-group {
+        margin-bottom: 20px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #555;
+      }
+      input[type="text"],
+      input[type="url"],
+      textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+        box-sizing: border-box;
+      }
+      textarea {
+        height: 100px;
+        resize: vertical;
+      }
+      button {
+        background-color: #ff0000;
+        color: white;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        width: 100%;
+      }
+      button:hover {
+        background-color: #cc0000;
+      }
+      .info {
+        background-color: #e8f4fd;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        border-left: 4px solid #4285f4;
+      }
+      .required {
+        color: #d93025;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🎵 Submit AI Band</h1>
+
+      <div class="info">
+        <strong>Help improve the AI band filter!</strong><br />
+        Submit AI-generated music artists to be added to the Grayjay YouTube
+        plugin's filter database. All submissions are reviewed before being
+        added.
+      </div>
+
+      <form id="submissionForm" action="/api/submit-ai-band" method="POST">
+        <div class="form-group">
+          <label for="artistName"
+            >Artist/Band Name <span class="required">*</span></label
+          >
+          <input
+            type="text"
+            id="artistName"
+            name="artistName"
+            required
+            placeholder="e.g., The Algorithmic Orchestra"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="youtubeUrl"
+            >YouTube Channel URL <span class="required">*</span></label
+          >
+          <input
+            type="url"
+            id="youtubeUrl"
+            name="youtubeUrl"
+            required
+            placeholder="https://www.youtube.com/@artistname or https://www.youtube.com/channel/UC..."
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="verificationLinks"
+            >Verification Links <span class="required">*</span></label
+          >
+          <textarea
+            id="verificationLinks"
+            name="verificationLinks"
+            required
+            placeholder="Links proving this is AI-generated content (news articles, official statements, etc.)&#10;One link per line"
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="otherPlatforms">Other Platform Links (Optional)</label>
+          <textarea
+            id="otherPlatforms"
+            name="otherPlatforms"
+            placeholder="Spotify, Apple Music, TikTok, etc.&#10;One link per line"
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="additionalInfo">Additional Information (Optional)</label>
+          <textarea
+            id="additionalInfo"
+            name="additionalInfo"
+            placeholder="Any additional context, comments, or information about this artist"
+          ></textarea>
+        </div>
+
+        <button type="submit">Submit AI Band</button>
+      </form>
+
+      <div class="info" style="margin-top: 20px">
+        <strong>Submission Guidelines:</strong>
+        <ul>
+          <li>Only submit confirmed AI-generated music artists</li>
+          <li>Provide verifiable sources in the verification links field</li>
+          <li>Use official channel URLs when possible</li>
+          <li>All submissions are manually reviewed</li>
+          <li>You will not receive confirmation of acceptance</li>
+        </ul>
+      </div>
+    </div>
+
+    <script>
+      document
+        .getElementById("submissionForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault(); // Prevent default form submission
+
+          // Basic validation
+          const youtubeUrl = document.getElementById("youtubeUrl").value;
+          if (
+            !youtubeUrl.includes("youtube.com") &&
+            !youtubeUrl.includes("youtu.be")
+          ) {
+            alert("Please enter a valid YouTube URL");
+            return;
+          }
+
+          const artistName = document.getElementById("artistName").value.trim();
+          const verificationLinks = document
+            .getElementById("verificationLinks")
+            .value.trim();
+
+          if (!artistName || !youtubeUrl || !verificationLinks) {
+            alert("Please fill in all required fields");
+            return;
+          }
+
+          // Show loading state
+          const submitButton = document.querySelector('button[type="submit"]');
+          const originalText = submitButton.textContent;
+          submitButton.textContent = "Submitting...";
+          submitButton.disabled = true;
+
+          // Prepare form data
+          const formData = new FormData(this);
+
+          // Submit via fetch
+          fetch("/api/submit-ai-band", {
+            method: "POST",
+            body: formData,
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                alert(
+                  "Thank you for your submission! It will be reviewed for inclusion in the AI band database.",
+                );
+                // Reset form
+                document.getElementById("submissionForm").reset();
+              } else {
+                alert("Error: " + (data.error || "Unknown error occurred"));
+              }
+            })
+            .catch((error) => {
+              console.error("Submission error:", error);
+              alert("Error submitting form. Please try again later.");
+            })
+            .finally(() => {
+              // Reset button state
+              submitButton.textContent = originalText;
+              submitButton.disabled = false;
+            });
+        });
+    </script>
+  </body>
+</html>

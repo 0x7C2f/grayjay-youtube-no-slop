@@ -310,6 +310,27 @@
 			"default": "false"
 		},
 		{
+			"variable": "submitAiBand",
+			"name": "Submit AI Band",
+			"description": "Submit a new AI-generated music artist to be added to the filter database.",
+			"type": "Action",
+			"action": "submitAiBand"
+		},
+		{
+			"variable": "checkForUpdates",
+			"name": "Check for AI Band Updates",
+			"description": "Manually check for new AI band submissions and update the filter database.",
+			"type": "Action",
+			"action": "checkForUpdates"
+		},
+		{
+			"variable": "checkPluginUpdates",
+			"name": "Check for Plugin Updates",
+			"description": "Check if a newer version of the YouTube plugin is available.",
+			"type": "Action",
+			"action": "checkPluginUpdates"
+		},
+		{
 			"variable": "advanced",
 			"name": "Advanced",
 			"description": "These are settings not intended for most users, but may help development or power users.",
